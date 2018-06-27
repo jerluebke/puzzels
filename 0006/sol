@@ -1,0 +1,12 @@
+pen and paper
+
+sum of integers up to n = n*(n+1)/2
+sum of squares = n*(n+1)*(2*n+1)/6
+
+the difference: sum(k)**2 - sum(k**2) = (6*n**4 + 4*n**3 - 6*n**2 - 4*n)/24
+
+implementation in python:
+
+    def pe6_sol(n):
+        return (6*n**4 + 4*n**3 - 6*n**2 - 4*n)/24
+
