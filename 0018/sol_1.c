@@ -87,9 +87,9 @@ void make_triangle(node *first, uint32_t *data, size_t lines)
 
 int main()
 {
-    FILE *fp;
     /* open file and check for errors */
-    if (fopen_s(&fp, FILENAME, "r")) {
+    FILE *fp = fopen(FILENAME, "r");
+    if (fp == NULL) {
         fprintf(stderr, "Failed to open file \"%s\"...\n", FILENAME);
         return EXIT_FAILURE;
     }
@@ -104,6 +104,9 @@ int main()
             ++size;
         else if (c == '\n')
             ++size, ++lines;
+
+    printf("%zu %zu", size, lines);
+
     /* reset file to start */
     rewind(fp);
 
@@ -130,7 +133,7 @@ int main()
 
     /* calculate and print largest sum */
     uint64_t sum = node_get_sum(triangle);
-    printf("Largst sum: %llu", sum);
+    printf("Largst sum: %lu", sum);
 
     /* don't forget! */
     free(data);
