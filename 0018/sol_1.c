@@ -28,7 +28,7 @@ void node_init(node *, uint32_t);
 
 uint64_t node_get_sum(node *);
 
-void make_triangle(node *, uint32_t *, size_t);
+/* void make_triangle(node *, uint32_t *, size_t); */
 
 
 /****************************
@@ -40,10 +40,13 @@ void node_init(node *new, uint32_t val)
     new->val = val;
     new->sum = -1;
     new->dir = '\0';
+    new->right = NULL;
+    new->left = NULL;
 }
 
 uint64_t node_get_sum(node *self)
 {
+    /* printf("sum of: %p\n", self); */
     /* last element - no children - return own value */
     if ((self->right == NULL) && (self->left == NULL))
         return self->val;
@@ -62,24 +65,25 @@ uint64_t node_get_sum(node *self)
     return self->sum;
 }
 
-void make_triangle(node *first, uint32_t *data, size_t lines)
+void make_triangle(node *first, size_t lines)
 {
     node *parent = first, *child = first + 1, *next_line;
-    /* init first element */
-    node_init(parent, *data++);
-    for (size_t cur=1; cur<=lines; ++cur) {
+
+    for (size_t cur=1; cur<lines; ++cur) {
         /* set first element of next row as end */
         next_line = parent + cur;
         while (parent != next_line) {
             /* init child */
-            node_init(child, *data++);
+            /* node_init(child, *data++); */
+            /* *child = new_node(*data++); */
             parent->right = child++;
             /* after incrementing the child ptr, its element will be initiated
              * either in the next iteration or after exiting this while loop */
             parent->left = child;
             ++parent;
         }
-        node_init(child, *data++);
+        /* node_init(child, *data++); */
+        /* *child = new_node(*data++); */
         ++child;    /* move child to next row */
     }
 }
@@ -97,7 +101,7 @@ int main()
     char c;
     /* start with 1 to include the last element while counting, which is not
      * followed by ' ' or '\n' (but by EOF) */
-    size_t size = 1, lines = 1;
+    size_t size = 0, lines = 0;
     /* count numbers and lines */
     while ((c = fgetc(fp)) != EOF)
         if (c == ' ')
@@ -105,14 +109,14 @@ int main()
         else if (c == '\n')
             ++size, ++lines;
 
-    printf("%zu %zu", size, lines);
+    printf("%zu %zu\n\n", size, lines);
 
     /* reset file to start */
     rewind(fp);
 
     /* allocate memory */
-    uint32_t *data = malloc(size * sizeof(uint32_t));
-    node *triangle = malloc(size * sizeof(node));
+    node *head = malloc(size * sizeof(node));
+    node *triangle = head;
 
     /* write content from file in data */
     char buf[NUMBER_SIZE+1];
@@ -120,24 +124,32 @@ int main()
     while ((c = fgetc(fp)) != EOF)
         if (c == ' ' || c == '\n') {
             i = 0;
-            *data = atoi(buf);
-            ++data;
+            /* triangle = malloc(sizeof(node)); */
+            /* triangle->val = atoi(buf); */
+            node_init(triangle, atoi(buf));
+            ++triangle;
         } else {
             buf[i] = c;
             ++i;
         }
     fclose(fp);
+    node *end = triangle;
+    triangle = head;
+
+    /* for (; triangle != end; ++triangle) */
+    /*     printf("%p\n", triangle); */
+
+    printf("\n\n");
 
     /* build triangle */
-    make_triangle(triangle, data, lines);
+    make_triangle(head, lines);
 
     /* calculate and print largest sum */
-    uint64_t sum = node_get_sum(triangle);
-    printf("Largst sum: %lu", sum);
+    uint64_t sum = node_get_sum(head);
+    printf("Largst sum: %lu\n", sum);
 
     /* don't forget! */
-    free(data);
-    free(triangle);
+    free(head);
 
     return EXIT_SUCCESS;
 }

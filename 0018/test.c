@@ -12,9 +12,6 @@ void init(struct node *n, short val)
 int main()
 {
     struct node n;
-    init(&n, 1);
-    printf("n = {i=%d}\n", n.i);
-    init(&n, 456);
-    printf("n = {i=%d}\n", n.i);
+    printf("%llu, %llu\n", sizeof(struct node *), sizeof(int *));
     return 0;
 }
