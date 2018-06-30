@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <stdio.h>
 
 #ifndef FILENAME
@@ -24,29 +25,28 @@ struct node {
     node *left;     /* left child */
 };
 
-void node_init(node *, uint32_t);
+inline static void node_init(node *, uint32_t);
 
 uint64_t node_get_sum(node *);
 
-/* void make_triangle(node *, uint32_t *, size_t); */
+void make_triangle(node *, size_t);
 
 
 /****************************
  * Implementations
  ****************************/
 
-void node_init(node *new, uint32_t val)
+inline static void node_init(node *new, uint32_t val)
 {
-    new->val = val;
-    new->sum = -1;
-    new->dir = '\0';
-    new->right = NULL;
-    new->left = NULL;
+    new->val    = val;
+    new->sum    = -1;
+    new->dir    = '\0';
+    new->right  = NULL;
+    new->left   = NULL;
 }
 
 uint64_t node_get_sum(node *self)
 {
-    /* printf("sum of: %p\n", self); */
     /* last element - no children - return own value */
     if ((self->right == NULL) && (self->left == NULL))
         return self->val;
@@ -67,29 +67,41 @@ uint64_t node_get_sum(node *self)
 
 void make_triangle(node *first, size_t lines)
 {
+    /* nodes have already been initiated in main
+     * here: set relations */
     node *parent = first, *child = first + 1, *next_line;
 
+    /* iterate from {1, ..., lines-1} since the last rows elements don't have
+     * any children */
     for (size_t cur=1; cur<lines; ++cur) {
         /* set first element of next row as end */
         next_line = parent + cur;
         while (parent != next_line) {
-            /* init child */
-            /* node_init(child, *data++); */
-            /* *child = new_node(*data++); */
             parent->right = child++;
-            /* after incrementing the child ptr, its element will be initiated
-             * either in the next iteration or after exiting this while loop */
+            /* this parents left child is next iterations right child */
             parent->left = child;
             ++parent;
         }
-        /* node_init(child, *data++); */
-        /* *child = new_node(*data++); */
         ++child;    /* move child to next row */
     }
 }
 
+void print_path(node *head)
+{
+    printf("path: ");
+    while (head != NULL) {
+        printf("%u ", head->val);
+        switch (head->dir) {
+            case 'r': head = head->right; break;
+            case 'l': head = head->left; break;
+            default: head = NULL;
+        }
+    }
+    printf("\n");
+}
 
-int main()
+
+int main(int argc, char **argv)
 {
     /* open file and check for errors */
     FILE *fp = fopen(FILENAME, "r");
@@ -99,8 +111,6 @@ int main()
     }
 
     char c;
-    /* start with 1 to include the last element while counting, which is not
-     * followed by ' ' or '\n' (but by EOF) */
     size_t size = 0, lines = 0;
     /* count numbers and lines */
     while ((c = fgetc(fp)) != EOF)
@@ -109,23 +119,25 @@ int main()
         else if (c == '\n')
             ++size, ++lines;
 
-    printf("%zu %zu\n\n", size, lines);
+    printf("%zu numbers in %zu lines\n\n", size, lines);
 
     /* reset file to start */
     rewind(fp);
 
-    /* allocate memory */
+    /* allocate nodes in continuous memory */
     node *head = malloc(size * sizeof(node));
+    if (head == NULL) {
+        fprintf(stderr, "malloc failed... \n");
+        return EXIT_FAILURE;
+    }
     node *triangle = head;
 
-    /* write content from file in data */
+    /* write content from file in notes */
     char buf[NUMBER_SIZE+1];
     int i = 0;
     while ((c = fgetc(fp)) != EOF)
         if (c == ' ' || c == '\n') {
             i = 0;
-            /* triangle = malloc(sizeof(node)); */
-            /* triangle->val = atoi(buf); */
             node_init(triangle, atoi(buf));
             ++triangle;
         } else {
@@ -133,20 +145,14 @@ int main()
             ++i;
         }
     fclose(fp);
-    node *end = triangle;
-    triangle = head;
 
-    /* for (; triangle != end; ++triangle) */
-    /*     printf("%p\n", triangle); */
-
-    printf("\n\n");
-
-    /* build triangle */
     make_triangle(head, lines);
 
-    /* calculate and print largest sum */
     uint64_t sum = node_get_sum(head);
     printf("Largst sum: %lu\n", sum);
+
+    if (argc > 1 && strcmp(argv[1], "path") == 0)
+        print_path(head);
 
     /* don't forget! */
     free(head);
